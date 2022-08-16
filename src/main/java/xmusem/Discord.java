@@ -22,6 +22,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -40,21 +42,26 @@ public class Discord {
     private static final OkHttpClient CLIENT = new OkHttpClient();
     public static final Map<String,String> HEADERS = new HashMap<>();
 
-//    public static void main(String[] args) throws IOException, InterruptedException {
-//        String authorization = "OTgzOTQ3MTI1MzE2NTUwNjg2.G9PpwK.2d7-_wyP40VMvcdVdoiEsvgRWMXTtOJMXbXiro";
-//        HEADERS.put("authorization",authorization);
-//        String date = "2022-07-27";
-//        String channelId = "1001781210466496522";
-//
-//        LinkedList<BotMessage> result = new LinkedList<>();
-//
-//        getMessageWithDate(result,date,channelId,null);
-//
-//        System.out.println(date + " 总数据 : " + JSON.toJSONString(result));
-//
-//        parseStatistics(result,channelId);
-//
-//    }
+    public static final String format = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXX";
+    public static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(format);
+
+    public static final String format2 = "yyyy-MM-dd HH:mm:ss";
+    public static final DateTimeFormatter dateTimeFormatter2 = DateTimeFormatter.ofPattern(format2);
+    public static void main(String[] args) throws IOException, InterruptedException {
+        String authorization = "OTgzOTQ3MTI1MzE2NTUwNjg2.GAGDKQ.hM_zpbc36IgrDAvSSSw9ijNxS9RCGnFNEXP0iw";
+        HEADERS.put("authorization",authorization);
+        String date = "2022-07-27";
+        String channelId = "1001781210466496522";
+
+        LinkedList<BotMessage> result = new LinkedList<>();
+
+        getMessageWithDate(result,date,channelId,null);
+
+        System.out.println(date + " 总数据 : " + JSON.toJSONString(result));
+
+        parseStatistics(result,channelId);
+
+    }
 
     private static void parseStatistics(LinkedList<BotMessage> result,String channelId){
         Map<String, List<BotMessage>> collect = result.stream()
@@ -156,25 +163,13 @@ public class Discord {
     private static List<BotMessage> parseMessage(String message){
         List<BotMessage> messages = JSONArray.parseArray(message,BotMessage.class);
         for(BotMessage value : messages){
+            value.setTimestamp(LocalDateTime.parse(value.getTimestamp()).format(dateTimeFormatter2));
             value.setDate(DateUtil.parse(value.getTimestamp()).toJdkDate());
-            value.setTimestamp(DateUtil.format(value.getDate(), "yyyy-MM-dd HH:mm:ss"));
             value.setAuthorName(value.getAuthor().getUsername());
             value.setAuthor(null);
         }
         System.out.println(JSON.toJSONString(messages));
         return messages;
-    }
-
-    public static void main(String[] args) throws ParseException {
-        String a = "2022-08-15T09:39:05.095000+00:00";
-        String b = "2022-08-15T09:38:44.904000+00:00";
-        String format = "yyyy-MM-dd'T'HH:mm:ss.FFFXXX";
-        SimpleDateFormat s = new SimpleDateFormat(format);
-        System.out.println(s.parse(b).toString());
-//        System.out.println(DateUtil.parse(a,format).toJdkDate());
-//        System.out.println(DateUtil.parse(b,format).toJdkDate());
-        System.out.println(s.format(DateUtil.parse(b).toJdkDate()));
-//        System.out.println(DateUtil.parse(b).toString(format));
     }
 
     private static String getChannelMessage(String channelId,Integer limit,String before) throws IOException {
